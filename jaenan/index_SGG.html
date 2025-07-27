@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>대한민국 시군구 지도</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map { height: 100vh; }
+  /* 툴팁 배경 색상과 투명도 조절 (rgba 사용) */
+  .leaflet-tooltip {
+    background-color: rgba(255, 255, 255, 0.8) !important; /* 흰색 배경에 70% 불투명 */
+    color: black;   /* 글자색 */
+    border-radius: 4px;
+    padding: 4px 8px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+  }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <script>
+    // 지도 초기화
+    const map = L.map('map').setView([36.5, 127.8], 7); // 대한민국 중심 좌표
+
+    // 기본 타일맵
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+    }).addTo(map);
+
+    // 기본 스타일
+    const defaultStyle = {
+      color: 'blue',
+      weight: 1,
+      fillOpacity: 0.1
+    };
+
+    // 하이라이트 스타일 (마우스 오버)
+    const highlightStyle = {
+      color: 'blue',
+      weight: 2,
+      fillOpacity: 0.4
+    };
+
+    // 각 feature마다 이벤트와 tooltip 지정
+    function onEachFeature(feature, layer) {
+      // 툴팁 내용 설정 (ADM_SECT_C, SGG_NM)
+      const props = feature.properties;
+      let tooltipContent = '';
+      if (props) {
+        tooltipContent += `ADM_SECT_C: ${props.ADM_SECT_C || '없음'}<br>`;
+        tooltipContent += `SGG_NM: ${props.SGG_NM || '없음'}`;
+      }
+      layer.bindTooltip(tooltipContent);
+
+      // 마우스 올리면 스타일 변경
+      layer.on('mouseover', function() {
+        layer.setStyle(highlightStyle);
+      });
+
+      // 마우스 나가면 원래 스타일로 복원
+      layer.on('mouseout', function() {
+        layer.setStyle(defaultStyle);
+      });
+    }
+
+    // 17개 파일 불러오기
+      fetch(`SGG_korea_simple.json`)
+        .then(response => response.json())
+        .then(data => {
+          L.geoJSON(data, {
+            style: defaultStyle,
+            onEachFeature: onEachFeature
+          }).addTo(map);
+        })
+        .catch(err => console.error(`SGG_${i}.geojson 로딩 실패`, err));
+  </script>
+</body>
+</html>
